@@ -138,8 +138,12 @@ export const AddItemDialog = ({ onAdd }: AddItemDialogProps) => {
                     <FormControl>
                       <Input 
                         {...field} 
-                        type="number"
-                        min={0}
+                        type="text"
+                        value={field.value !== undefined ? new Intl.NumberFormat("id-ID").format(field.value) : ""}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, "");
+                          field.onChange(Number(value));
+                        }}
                         className="bg-secondary border-border"
                       />
                     </FormControl>
