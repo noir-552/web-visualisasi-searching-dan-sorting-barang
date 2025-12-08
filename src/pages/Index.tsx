@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { MergeSortVisualization } from "@/components/MergeSortVisualization";
 import { BinarySearchVisualization } from "@/components/BinarySearchVisualization";
 import { DataTable } from "@/components/DataTable";
 import { CodeBlock } from "@/components/CodeBlock";
-import { ArrowUpDown, Search, Database, Code2, Sparkles } from "lucide-react";
+import { AddItemDialog } from "@/components/AddItemDialog";
+import { useInventaris } from "@/hooks/useInventaris";
+import { ArrowUpDown, Search, Database, Code2, Sparkles, RotateCcw } from "lucide-react";
 
 const mergeSortCode = `def merge_sort_inventaris(arr, sort_by="nama"):
     if len(arr) <= 1:
@@ -51,6 +54,7 @@ const binarySearchCode = `def binary_search_inventaris(arr, target, search_by="n
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("data");
+  const { items, addItem, deleteItem, resetItems } = useInventaris();
 
   return (
     <div className="min-h-screen bg-background">
@@ -91,6 +95,10 @@ const Index = () => {
               <Search className="w-4 h-4 text-accent" />
               <span className="text-sm">Binary Search O(log n)</span>
             </div>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 border border-primary/20">
+              <Database className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">{items.length} items</span>
+            </div>
           </div>
         </div>
       </header>
@@ -130,13 +138,26 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="data" className="space-y-6 animate-slide-up">
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-foreground">Data Inventaris</h2>
-              <p className="text-muted-foreground">
-                Data awal yang digunakan dalam visualisasi algoritma sorting dan searching.
-              </p>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-bold text-foreground">Data Inventaris</h2>
+                <p className="text-muted-foreground">
+                  Kelola data inventaris yang digunakan dalam visualisasi algoritma.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={resetItems}
+                  className="border-border gap-2"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Reset
+                </Button>
+                <AddItemDialog onAdd={addItem} />
+              </div>
             </div>
-            <DataTable />
+            <DataTable data={items} onDelete={deleteItem} />
           </TabsContent>
 
           <TabsContent value="merge-sort" className="space-y-6 animate-slide-up">
@@ -146,7 +167,7 @@ const Index = () => {
                 Lihat bagaimana algoritma Merge Sort membagi dan menggabungkan array secara rekursif.
               </p>
             </div>
-            <MergeSortVisualization />
+            <MergeSortVisualization data={items} />
           </TabsContent>
 
           <TabsContent value="binary-search" className="space-y-6 animate-slide-up">
@@ -156,7 +177,7 @@ const Index = () => {
                 Lihat bagaimana Binary Search mencari item dengan membagi area pencarian menjadi dua.
               </p>
             </div>
-            <BinarySearchVisualization />
+            <BinarySearchVisualization data={items} />
           </TabsContent>
 
           <TabsContent value="code" className="space-y-6 animate-slide-up">
