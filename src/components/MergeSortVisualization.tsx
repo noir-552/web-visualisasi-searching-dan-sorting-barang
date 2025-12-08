@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { InventarisItem, inventarisData, SortField } from "@/data/inventaris";
+import { InventarisItem, SortField } from "@/data/inventaris";
 import { InventarisCard } from "./InventarisCard";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Play, Pause, RotateCcw, SkipForward, Zap } from "lucide-react";
-import { cn } from "@/lib/utils";
+
+interface MergeSortVisualizationProps {
+  data: InventarisItem[];
+}
 
 interface SortStep {
   arrays: InventarisItem[][];
@@ -97,7 +100,7 @@ const generateMergeSortSteps = (
   return steps;
 };
 
-export const MergeSortVisualization = () => {
+export const MergeSortVisualization = ({ data }: MergeSortVisualizationProps) => {
   const [sortBy, setSortBy] = useState<SortField>("nama");
   const [steps, setSteps] = useState<SortStep[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
@@ -105,11 +108,15 @@ export const MergeSortVisualization = () => {
   const [speed, setSpeed] = useState(1000);
 
   const initializeSteps = useCallback(() => {
-    const newSteps = generateMergeSortSteps(inventarisData, sortBy);
+    if (data.length === 0) {
+      setSteps([]);
+      return;
+    }
+    const newSteps = generateMergeSortSteps(data, sortBy);
     setSteps(newSteps);
     setCurrentStep(0);
     setIsPlaying(false);
-  }, [sortBy]);
+  }, [sortBy, data]);
 
   useEffect(() => {
     initializeSteps();
@@ -147,6 +154,14 @@ export const MergeSortVisualization = () => {
   };
 
   const currentStepData = steps[currentStep];
+
+  if (data.length === 0) {
+    return (
+      <div className="p-8 text-center text-muted-foreground rounded-xl border border-border">
+        Tambahkan item inventaris untuk melihat visualisasi Merge Sort
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

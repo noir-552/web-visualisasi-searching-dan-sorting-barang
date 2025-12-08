@@ -1,10 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { InventarisItem, inventarisData, SortField } from "@/data/inventaris";
+import { InventarisItem, SortField } from "@/data/inventaris";
 import { InventarisCard } from "./InventarisCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Play, Pause, RotateCcw, SkipForward, Search, Zap } from "lucide-react";
+
+interface BinarySearchVisualizationProps {
+  data: InventarisItem[];
+}
 
 interface SearchStep {
   array: InventarisItem[];
@@ -122,25 +126,34 @@ const generateBinarySearchSteps = (
   return steps;
 };
 
-export const BinarySearchVisualization = () => {
+export const BinarySearchVisualization = ({ data }: BinarySearchVisualizationProps) => {
   const [searchBy, setSearchBy] = useState<"nama" | "jenis">("nama");
-  const [searchTarget, setSearchTarget] = useState("Laptop");
+  const [searchTarget, setSearchTarget] = useState("");
   const [steps, setSteps] = useState<SearchStep[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1000);
 
   const suggestions = searchBy === "nama" 
-    ? inventarisData.map(i => i.nama)
-    : [...new Set(inventarisData.map(i => i.jenis))];
+    ? data.map(i => i.nama)
+    : [...new Set(data.map(i => i.jenis))];
+
+  useEffect(() => {
+    if (suggestions.length > 0 && !searchTarget) {
+      setSearchTarget(suggestions[0]);
+    }
+  }, [data, searchBy]);
 
   const initializeSearch = useCallback(() => {
-    if (!searchTarget.trim()) return;
-    const newSteps = generateBinarySearchSteps(inventarisData, searchTarget, searchBy);
+    if (!searchTarget.trim() || data.length === 0) {
+      setSteps([]);
+      return;
+    }
+    const newSteps = generateBinarySearchSteps(data, searchTarget, searchBy);
     setSteps(newSteps);
     setCurrentStep(0);
     setIsPlaying(false);
-  }, [searchTarget, searchBy]);
+  }, [searchTarget, searchBy, data]);
 
   useEffect(() => {
     initializeSearch();
@@ -178,6 +191,14 @@ export const BinarySearchVisualization = () => {
   };
 
   const currentStepData = steps[currentStep];
+
+  if (data.length === 0) {
+    return (
+      <div className="p-8 text-center text-muted-foreground rounded-xl border border-border">
+        Tambahkan item inventaris untuk melihat visualisasi Binary Search
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -217,7 +238,7 @@ export const BinarySearchVisualization = () => {
       {/* Quick suggestions */}
       <div className="flex flex-wrap gap-2">
         <span className="text-xs text-muted-foreground">Coba:</span>
-        {suggestions.map((s) => (
+        {suggestions.slice(0, 6).map((s) => (
           <button
             key={s}
             onClick={() => setSearchTarget(s)}
@@ -242,6 +263,7 @@ export const BinarySearchVisualization = () => {
           <Button
             onClick={handlePlayPause}
             className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+            disabled={steps.length === 0}
           >
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             {isPlaying ? "Pause" : "Play"}
@@ -272,18 +294,22 @@ export const BinarySearchVisualization = () => {
           </Select>
         </div>
 
-        <div className="ml-auto text-sm text-muted-foreground font-mono">
-          Step {currentStep + 1} / {steps.length}
-        </div>
+        {steps.length > 0 && (
+          <div className="ml-auto text-sm text-muted-foreground font-mono">
+            Step {currentStep + 1} / {steps.length}
+          </div>
+        )}
       </div>
 
       {/* Progress bar */}
-      <div className="h-2 bg-secondary rounded-full overflow-hidden">
-        <div
-          className="h-full bg-accent transition-all duration-300"
-          style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-        />
-      </div>
+      {steps.length > 0 && (
+        <div className="h-2 bg-secondary rounded-full overflow-hidden">
+          <div
+            className="h-full bg-accent transition-all duration-300"
+            style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+          />
+        </div>
+      )}
 
       {/* Description */}
       {currentStepData && (
